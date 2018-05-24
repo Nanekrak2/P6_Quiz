@@ -1,6 +1,9 @@
 const Sequelize = require("sequelize");
 const {models} = require("../models");
 
+let score=0;
+let toBePlayed=[];
+let remaining=0;
 // Autoload the quiz with id equals to :quizId
 exports.load = (req, res, next, quizId) => {
 
@@ -41,7 +44,7 @@ exports.show = (req, res, next) => {
 exports.new = (req, res, next) => {
 
     const quiz = {
-        question: "", 
+        question: "",
         answer: ""
     };
 
@@ -153,3 +156,55 @@ exports.check = (req, res, next) => {
         answer
     });
 };
+exports.randomcheck = (req,res,next) => {
+  const {quiz, query} = req;
+
+   const answer = query.answer || "";
+   const result = answer.toLowerCase().trim() === quiz.answer.toLowerCase().trim();
+   const score= req.session.randomPlay.length + result;
+   req.session.randomPlay.push(quiz.id);
+
+   if(!result){
+     req.session.randomPlay=[];
+   }
+   res.render('quizzes/random_result',{
+     answer,
+     result,
+     score
+   });
+}
+
+exports.randomplay = (req,res,next) => {
+
+  req.session.randomPlay = req.session.randomPlay || [];
+  const op = Sequelize.op;
+  const whereOpt = {id: {[op.notIn]: req.session.randomPlay}};
+
+  models.quiz.count({where:whereOp})
+  .then(count => {
+    if (count ===0){
+      const score= req.session.randomPlay.length;
+      req.session.randomPlay = [];
+      res.render('quizzes/random_nomore',{
+        score
+      });
+    }
+    return models.quiz.findAll({
+      where:whereOpt,
+      offset: Math.floor(count * Math.random()),
+      limit: 1
+    })
+    .then(quizzes => {
+      return quizzes[0];
+    });
+  })
+  .then(quiz => {
+    const score = req.session.randomPlay.length;
+    res.render('quizzes/random_play',{
+      quiz,
+      score
+    });
+  })
+  .catch(error => {
+    next(error);
+  });
