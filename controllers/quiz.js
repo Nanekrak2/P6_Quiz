@@ -177,7 +177,7 @@ exports.randomcheck = (req,res,next) => {
 exports.randomplay = (req,res,next) => {
 
   req.session.randomPlay = req.session.randomPlay || [];
-  const op = Sequelize.op;
+  const op = Sequelize.Op;
   const whereOpt = {id: {[op.notIn]: req.session.randomPlay}};
 
   models.quiz.count({where:whereOp})
