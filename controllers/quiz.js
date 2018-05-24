@@ -180,7 +180,7 @@ exports.randomplay = (req,res,next) => {
   const op = Sequelize.Op;
   const whereOpt = {id: {[op.notIn]: req.session.randomPlay}};
 
-  models.quiz.count({where:whereOp})
+  models.quiz.count({where:whereOpt})
   .then(count => {
     if (count ===0){
       const score= req.session.randomPlay.length;
